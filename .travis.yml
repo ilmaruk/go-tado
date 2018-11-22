@@ -9,3 +9,11 @@ go:
   - 1.11.2
 
 os: linux
+
+dist: trusty
+
+addons:
+  sonarcloud:
+    organization: "ilmaruk-github"
+  script:
+    sonar-scanner
