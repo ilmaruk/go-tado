@@ -1,9 +1,6 @@
 language: go
 
 go:
-  - 1.7.6
-  - 1.8.7
-  - 1.9.7
   - 1.10.5
   - 1.11.2
 
@@ -16,5 +13,5 @@ addons:
     organization: "ilmaruk-github"
 
 script:
-  - go test -coverprofile=coverage.out ./...
+  - go test -race -coverprofile=coverage.out ./...
   - sonar-scanner
