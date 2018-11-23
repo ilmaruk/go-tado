@@ -3,66 +3,73 @@ package tado
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"golang.org/x/oauth2"
 	"io/ioutil"
 	"net/http"
 )
 
-const (
-	tadoClientId     = "tado-web-app"
-	tadoClientSecret = "wZaRN7rpjn3FoNyF5IFuxg9uMzYJcvOoQ8QWiIqS3hfk6gLhVlG57j5YNoZL2Rtc"
-	tadoAuthHost     = "https://auth.tado.com"
-	tadoMyHost       = "https://my.tado.com"
+type TadoConfig struct {
+	AuthConfig AuthConfig
+	ApiHost    string
+}
+
+type AuthConfig struct {
+	ClientId         string
+	ClientSecret     string
+	Scopes           []string
+	TokenEndpointURL string
+}
+
+var (
+	tadoConfig TadoConfig
+	oauthConf  *oauth2.Config
+	client     *http.Client
+	ctx        context.Context
 )
 
-type OAuth2Info struct {
-	AccessToken  string `json:"access_token"`
-	ExpiresIn    int    `json:"expires_in"`
-	Jti          string `json:"jti"`
-	RefreshToken string `json:"refresh_token"`
-	Scope        string `json:"scope"`
-	TokenType    string `json:"token_type"`
-}
-
-var authInfo OAuth2Info
-var conf = &oauth2.Config{}
-var client = &http.Client{}
-var ctx = context.Background()
-
-func MakeUrl(path string) string {
-	return tadoMyHost + path
-}
-
-func Authenticate(userName string, password string) error {
-	conf = &oauth2.Config{
-		ClientID:     tadoClientId,
-		ClientSecret: tadoClientSecret,
-		Scopes:       []string{"home.user"},
-		Endpoint: oauth2.Endpoint{
-			TokenURL: tadoAuthHost + "/oauth/token",
+func init() {
+	tadoConfig = TadoConfig{
+		ApiHost: "https://my.tado.com",
+		AuthConfig: AuthConfig{
+			ClientId:         "tado-web-app",
+			ClientSecret:     "wZaRN7rpjn3FoNyF5IFuxg9uMzYJcvOoQ8QWiIqS3hfk6gLhVlG57j5YNoZL2Rtc",
+			Scopes:           []string{"home.user"},
+			TokenEndpointURL: "https://auth.tado.com/oauth/token",
 		},
 	}
+	ctx = context.Background()
+	Config(tadoConfig)
+}
 
-	tok, err := conf.PasswordCredentialsToken(ctx, userName, password)
+func Config(config TadoConfig) {
+	tadoConfig = config
+	oauthConf = &oauth2.Config{
+		ClientID:     tadoConfig.AuthConfig.ClientId,
+		ClientSecret: tadoConfig.AuthConfig.ClientSecret,
+		Scopes:       tadoConfig.AuthConfig.Scopes,
+		Endpoint: oauth2.Endpoint{
+			TokenURL: tadoConfig.AuthConfig.TokenEndpointURL,
+		},
+	}
+}
+
+func Authenticate(username, password string) error {
+	tok, err := oauthConf.PasswordCredentialsToken(ctx, username, password)
 	if err != nil {
 		return err
 	}
 
-	client = conf.Client(ctx, tok)
+	client = oauthConf.Client(ctx, tok)
 	return nil
 }
 
-func NewRequest(method string, url string) (*http.Request, error) {
-	req, err := http.NewRequest(method, url, nil)
-	if err != nil {
-		return nil, err
+func RunRequest(method, path string, data interface{}) error {
+	if client == nil {
+		return errors.New("tadogo.Authenticate() not run yet")
 	}
-	req.Header.Add("Authorization", "Bearer "+authInfo.AccessToken)
-	return req, nil
-}
 
-func RunRequest(method, url string, data interface{}) error {
-	req, err := NewRequest(method, url)
+	req, err := http.NewRequest(method, tadoConfig.ApiHost+path, nil)
 	if err != nil {
 		return err
 	}

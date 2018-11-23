@@ -15,7 +15,7 @@ const (
 
 func GetMe() (Me, error) {
 	var data Me
-	err := tado.RunRequest(http.MethodGet, makeUrl(mePath), &data)
+	err := tado.RunRequest(http.MethodGet, apiPath+mePath, &data)
 	if err != nil {
 		return data, err
 	}
@@ -24,7 +24,7 @@ func GetMe() (Me, error) {
 
 func GetZones(houseId int) ([]Zone, error) {
 	var data []Zone
-	err := tado.RunRequest(http.MethodGet, makeUrl(fmt.Sprintf(zonesPath, houseId)), &data)
+	err := tado.RunRequest(http.MethodGet, apiPath+fmt.Sprintf(zonesPath, houseId), &data)
 	if err != nil {
 		return data, err
 	}
@@ -33,13 +33,9 @@ func GetZones(houseId int) ([]Zone, error) {
 
 func GetZoneState(houseId int, zoneId int) (ZoneState, error) {
 	var data ZoneState
-	err := tado.RunRequest(http.MethodGet, makeUrl(fmt.Sprintf(zoneStatePath, houseId, zoneId)), &data)
+	err := tado.RunRequest(http.MethodGet, apiPath+fmt.Sprintf(zoneStatePath, houseId, zoneId), &data)
 	if err != nil {
 		return data, err
 	}
 	return data, nil
-}
-
-func makeUrl(path string) string {
-	return tado.MakeUrl(apiPath + path)
 }

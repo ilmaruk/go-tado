@@ -7,18 +7,14 @@ import (
 
 const (
 	apiPath = "/api/v1"
-	mePath = "/me"
+	mePath  = "/me"
 )
 
-func Me() (MeStruct, error) {
-	var data MeStruct
-	err := tado.RunRequest(http.MethodGet, makeUrl(mePath), &data)
+func GetMe() (Me, error) {
+	var data Me
+	err := tado.RunRequest(http.MethodGet, apiPath+mePath, &data)
 	if err != nil {
 		return data, err
 	}
 	return data, nil
-}
-
-func makeUrl(path string) string {
-	return tado.MakeUrl(apiPath + path)
 }

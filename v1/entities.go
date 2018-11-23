@@ -1,6 +1,6 @@
 package v1
 
-type MeStruct struct {
+type Me struct {
 	Email    string `json:"email"`
 	Enabled  bool   `json:"enabled"`
 	HomeId   int    `json:"homeId"`
