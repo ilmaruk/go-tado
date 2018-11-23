@@ -1,9 +1,7 @@
 package v1
 
 import (
-	"encoding/json"
 	"github.com/ilmaruk/tadogo"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -14,24 +12,10 @@ const (
 
 func Me() (MeStruct, error) {
 	var data MeStruct
-
-	req, err := tado.NewRequest(http.MethodGet, makeUrl(mePath))
+	err := tado.RunRequest(http.MethodGet, makeUrl(mePath), &data)
 	if err != nil {
 		return data, err
 	}
-
-	resp, err := tado.HttpClient.Do(req)
-	if err != nil {
-		return data, err
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-
-	if err := json.Unmarshal(body, &data); err != nil {
-		return data, err
-	}
-
 	return data, nil
 }
 

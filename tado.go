@@ -1,11 +1,11 @@
 package tado
 
 import (
+	"context"
 	"encoding/json"
+	"golang.org/x/oauth2"
 	"io/ioutil"
 	"net/http"
-	"net/url"
-	"strings"
 )
 
 const (
@@ -24,42 +24,31 @@ type OAuth2Info struct {
 	TokenType    string `json:"token_type"`
 }
 
-var (
-	HttpClient = &http.Client{}
-	authInfo   OAuth2Info
-)
+var authInfo OAuth2Info
+var conf = &oauth2.Config{}
+var client = &http.Client{}
+var ctx = context.Background()
 
 func MakeUrl(path string) string {
 	return tadoMyHost + path
 }
 
 func Authenticate(userName string, password string) error {
-	data := url.Values{
-		"client_id":     {tadoClientId},
-		"client_secret": {tadoClientSecret},
-		"grant_type":    {"password"},
-		"scope":         {"home.user"},
-		"password":      {password},
-		"username":      {userName},
+	conf = &oauth2.Config{
+		ClientID:     tadoClientId,
+		ClientSecret: tadoClientSecret,
+		Scopes:       []string{"home.user"},
+		Endpoint: oauth2.Endpoint{
+			TokenURL: tadoAuthHost + "/oauth/token",
+		},
 	}
-	req, err := http.NewRequest(http.MethodPost, tadoAuthHost+ "/oauth/token", strings.NewReader(data.Encode()))
+
+	tok, err := conf.PasswordCredentialsToken(ctx, userName, password)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	resp, err := HttpClient.Do(req)
-	if err != nil {
-		return err
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-
-	if err := json.Unmarshal(body, &authInfo); err != nil {
-		return err
-	}
-
+	client = conf.Client(ctx, tok)
 	return nil
 }
 
@@ -68,6 +57,27 @@ func NewRequest(method string, url string) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Authorization", "Bearer " + authInfo.AccessToken)
+	req.Header.Add("Authorization", "Bearer "+authInfo.AccessToken)
 	return req, nil
+}
+
+func RunRequest(method, url string, data interface{}) error {
+	req, err := NewRequest(method, url)
+	if err != nil {
+		return err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+
+	if err := json.Unmarshal(body, data); err != nil {
+		return err
+	}
+
+	return nil
 }

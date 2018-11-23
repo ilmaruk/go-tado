@@ -1,10 +1,8 @@
 package v2
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/ilmaruk/tadogo"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -17,70 +15,28 @@ const (
 
 func GetMe() (Me, error) {
 	var data Me
-
-	req, err := tado.NewRequest(http.MethodGet, makeUrl(mePath))
+	err := tado.RunRequest(http.MethodGet, makeUrl(mePath), &data)
 	if err != nil {
 		return data, err
 	}
-
-	resp, err := tado.HttpClient.Do(req)
-	if err != nil {
-		return data, err
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-
-	if err := json.Unmarshal(body, &data); err != nil {
-		return data, err
-	}
-
 	return data, nil
 }
 
 func GetZones(houseId int) ([]Zone, error) {
 	var data []Zone
-
-	req, err := tado.NewRequest(http.MethodGet, makeUrl(fmt.Sprintf(zonesPath, houseId)))
+	err := tado.RunRequest(http.MethodGet, makeUrl(fmt.Sprintf(zonesPath, houseId)), &data)
 	if err != nil {
 		return data, err
 	}
-
-	resp, err := tado.HttpClient.Do(req)
-	if err != nil {
-		return data, err
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-
-	if err := json.Unmarshal(body, &data); err != nil {
-		return data, err
-	}
-
 	return data, nil
 }
 
 func GetZoneState(houseId int, zoneId int) (ZoneState, error) {
 	var data ZoneState
-
-	req, err := tado.NewRequest(http.MethodGet, makeUrl(fmt.Sprintf(zoneStatePath, houseId, zoneId)))
+	err := tado.RunRequest(http.MethodGet, makeUrl(fmt.Sprintf(zoneStatePath, houseId, zoneId)), &data)
 	if err != nil {
 		return data, err
 	}
-
-	resp, err := tado.HttpClient.Do(req)
-	if err != nil {
-		return data, err
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-
-	if err := json.Unmarshal(body, &data); err != nil {
-		return data, err
-	}
-
 	return data, nil
 }
 
