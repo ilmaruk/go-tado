@@ -16,5 +16,5 @@ addons:
     organization: "ilmaruk-github"
 
 script:
-  go test -race -coverprofile=coverage.out ./...
-  sonar-scanner
+  - go test -race -coverprofile=coverage.out ./...
+  - sonar-scanner
