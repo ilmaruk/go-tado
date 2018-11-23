@@ -15,4 +15,5 @@ addons:
   sonarcloud:
     organization: "ilmaruk-github"
   script:
+    go test -race -coverprofile=coverage.out ./...
     sonar-scanner
