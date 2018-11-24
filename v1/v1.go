@@ -10,9 +10,11 @@ const (
 	mePath  = "/me"
 )
 
+var requestRunner = tado.RunRequest
+
 func GetMe() (Me, error) {
 	var data Me
-	err := tado.RunRequest(http.MethodGet, apiPath+mePath, &data)
+	err := requestRunner(http.MethodGet, apiPath+mePath, &data)
 	if err != nil {
 		return data, err
 	}
